@@ -25,5 +25,10 @@ module.exports = {
     sourceType: "module",
   },
   plugins: ["@typescript-eslint", "react"],
-  rules: {},
+  rules: {
+    "comma-dangle": [
+      "error",
+      { objects: "only-multiline", arrays: "only-multiline" },
+    ],
+  },
 };
