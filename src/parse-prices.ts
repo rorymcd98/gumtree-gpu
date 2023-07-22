@@ -1,5 +1,5 @@
-import { form } from "blessed";
 import * as fs from "fs";
+import prod from "./set-prod";
 
 interface GPU {
   title: string;
@@ -35,8 +35,8 @@ const poundStringToInt = (poundString: string): number => {
 };
 
 const formattedDate = (date: Date): string => {
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear().toString().slice(2);
   return `${day}/${month}/${year}`;
 };
@@ -101,7 +101,7 @@ export async function categoriseGPUs(
   const seenUrls = new Set<string>();
   try {
     const filenames = fs.readdirSync(jsonPath);
-    const rules = fs.readFileSync("./src/rules.json", "utf-8");
+    const rules = fs.readFileSync(`./src/rules${prod}.json`, "utf-8");
     const rulesJson: Rules = JSON.parse(rules);
 
     for (const file of filenames) {

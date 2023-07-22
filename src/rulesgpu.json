@@ -5,11 +5,11 @@
   },
   "2080": {
     "mustInclude": [["2080"]],
-    "mustExclude": [" ti ", "0ti", " ti"]
+    "mustExclude": [" ", " ti ", "0ti", " ti"]
   },
   "2080 ti": {
     "mustInclude": [["2080"], [" ti ", "0ti", "ti ", " ti"]],
-    "mustExclude": []
+    "mustExclude": [" "]
   },
   "3060": {
     "mustInclude": [["3060"]],
@@ -95,8 +95,16 @@
     "mustInclude": [["6950"]],
     "mustExclude": []
   },
-  "7900": {
-    "mustInclude": [["7900"]],
+  "7800M XT": {
+    "mustInclude": [["7800"]],
+    "mustExclude": []
+  },
+  "6850M XT": {
+    "mustInclude": [["6850"]],
+    "mustExclude": []
+  },
+  "6700M/S": {
+    "mustInclude": [["6700"]],
     "mustExclude": []
   }
 }

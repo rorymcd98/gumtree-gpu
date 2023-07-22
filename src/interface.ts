@@ -40,7 +40,7 @@ const sortGpuList = (
       }
     : priceSortFunction;
 
-  return gpuList.sort(priceSortFunction);
+  return gpuList.sort(sortFunction);
 };
 
 const appendIgnoreList = (gpuUrls: string[]) => {
@@ -65,6 +65,34 @@ const appendIgnoreList = (gpuUrls: string[]) => {
     console.log(err);
   }
 };
+
+function undoIgnoreList() {
+  const path = "./src/ignore.json";
+  try {
+    const ignoreFile = fs.readFileSync(path, "utf8");
+    const ignoreJson: IgnoreData = JSON.parse(ignoreFile);
+    if (!ignoreJson.ignoreList) {
+      ignoreJson.ignoreList = {};
+    }
+    if (!ignoreJson.history) {
+      ignoreJson.history = {};
+    }
+    const historyKeys = Object.keys(ignoreJson.history);
+    if (historyKeys.length === 0) {
+      return;
+    }
+    const lastHistoryKey = historyKeys[historyKeys.length - 1];
+    const gpuUrls = ignoreJson.history[lastHistoryKey];
+    for (const gpuUrl of gpuUrls) {
+      delete ignoreJson.ignoreList[gpuUrl];
+    }
+    delete ignoreJson.history[lastHistoryKey];
+    const updatedIgnoreList = JSON.stringify(ignoreJson);
+    fs.writeFileSync(path, updatedIgnoreList);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
 const filterIgnoreList = (
   categorisedGpus: CategorisedGpus
@@ -117,7 +145,7 @@ export async function createUI(unfilteredCategorisedGpus: CategorisedGpus) {
   });
   let searchTerm = "";
   let categorisedGpus = unfilteredCategorisedGpus;
-  let isPriceSorted = true;
+  let isPriceSorted = false;
   const indeces = { category: 0, gpu: 0 };
   let indicesRecord: Record<string, number[]> = {};
   function recheckCategories(categoryIndex = 0, gpuIndex?: number) {
@@ -132,15 +160,15 @@ export async function createUI(unfilteredCategorisedGpus: CategorisedGpus) {
       newCategorisedGpus = fuseCategorisedGpus;
       newFuseScoresRecord = isPriceSorted ? undefined : fuseScoresRecord;
     }
-    // Object.keys(newCategorisedGpus).forEach((category) => {
-    //   const fuseScores = newFuseScoresRecord?.[category];
-    //   newCategorisedGpus[category] = sortGpuList(
-    //     newCategorisedGpus[category],
-    //     fuseScores
-    //   );
-    // });
+    Object.keys(newCategorisedGpus).forEach((category) => {
+      const fuseScores = newFuseScoresRecord?.[category];
+      newCategorisedGpus[category] = sortGpuList(
+        newCategorisedGpus[category],
+        fuseScores
+      );
+    });
 
-    newCategorisedGpus = filterIgnoreList(unfilteredCategorisedGpus);
+    // newCategorisedGpus = filterIgnoreList(newCategorisedGpus);
     categoryList.setItems(Object.keys(newCategorisedGpus));
     gpuList.setItems(formatGPUList(newCategorisedGpus, categoryIndex));
     categorisedGpus = newCategorisedGpus;
@@ -241,6 +269,14 @@ export async function createUI(unfilteredCategorisedGpus: CategorisedGpus) {
       searchTerm = "";
       toggleSearchBar();
     }
+    if (key.ctrl && key.name === "s") {
+      isPriceSorted = !isPriceSorted;
+      recheckCategories(indeces.category, indeces.gpu);
+    }
+    if (key.ctrl && key.name === "z") {
+      undoIgnoreList();
+      recheckCategories(indeces.category, indeces.gpu);
+    }
   });
 
   searchBar.on("keypress", (ch, key) => {
@@ -338,12 +374,8 @@ export async function createUI(unfilteredCategorisedGpus: CategorisedGpus) {
               Object.values(categorisedGpus)[indeces.category][indeces.gpu];
             const gpuUrl = gpu.itemUrl;
             appendIgnoreList([gpuUrl]);
-            recheckCategories(indeces.category, indeces.gpu);
-            // list.down(1);
-            // index = Math.min(
-            //   index + 1,
-            //   Object.keys(categorisedGpus).length - 1
-            // );
+            index = Math.min(index, Object.keys(categorisedGpus).length - 2);
+            recheckCategories(indeces.category, index);
           }
           break;
         case "enter":

@@ -3,10 +3,6 @@ import { createCrawler } from "./scrape";
 import fs from "fs";
 const config = Configuration.getGlobalConfig();
 config.set("purgeOnStart", false);
-export const storageId = "laptop";
-config.set("defaultDatasetId", storageId);
-config.set("defaultKeyValueStoreId", storageId);
-config.set("defaultRequestQueueId", storageId);
 
 function purgeRequestQueueFolder() {
   const path = "./storage/request_queues/";
@@ -16,16 +12,25 @@ function purgeRequestQueueFolder() {
   }
 }
 
-export enum Categories {
-  GENERAL = "https://www.gumtree.com/for-sale/computers-software/computers-pcs-laptops/memory-motherboards-processors/uk/page",
-  GPU = "https://www.gumtree.com/search?search_category=video-cards-sound-cards&search_location=uk&page=",
-  LAPTOP = "https://www.gumtree.com/for-sale/computers-software/computers-pcs-laptops/laptops/uk/page",
-}
+import prod, { Prod } from "./set-prod";
 
+const Categories = {
+  [Prod.general]:
+    "https://www.gumtree.com/for-sale/computers-software/computers-pcs-laptops/memory-motherboards-processors/uk/page",
+  [Prod.gpu]:
+    "https://www.gumtree.com/search?search_category=video-cards-sound-cards&search_location=uk&page=",
+  [Prod.laptop]:
+    "https://www.gumtree.com/for-sale/computers-software/computers-pcs-laptops/laptops/uk/page",
+};
+
+const url = Categories[prod];
 (async () => {
   const initialPage = 1;
   // purgeRequestQueueFolder();
-  const url = Categories.LAPTOP;
-  const crawler = createCrawler(35, 100, url);
+
+  config.set("defaultDatasetId", prod);
+  config.set("defaultKeyValueStoreId", prod);
+  config.set("defaultRequestQueueId", prod);
+  const crawler = createCrawler(2, 100, url);
   await crawler.run([url + initialPage]);
 })();
